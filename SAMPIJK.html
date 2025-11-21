@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Agri System</title>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+<style>
+/* ---------------- GLOBAL STYLE ------------------ */
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins}
+body{background:#eef2f5}
+
+/* Hide all pages initially */
+.page{display:none}
+
+/* ---------------- LOGIN PAGE ------------------ */
+#loginPage{
+height:100vh;display:flex;justify-content:center;align-items:center;
+background:linear-gradient(135deg,#002b5b,#124f8c);color:white;
+}
+.login-box{
+background:rgba(255,255,255,0.12);padding:40px;width:350px;
+border-radius:20px;backdrop-filter:blur(10px);
+}
+.login-box input{
+width:100%;padding:12px;border:none;border-radius:10px;margin-top:10px
+}
+.btn{width:100%;padding:12px;border:none;border-radius:10px;
+background:#00c897;color:white;font-size:18px;margin-top:15px;cursor:pointer}
+.btn:hover{background:#009f75}
+
+/* ---------------- SIGNUP PAGE ------------------ */
+#signupPage{height:100vh;display:flex;justify-content:center;align-items:center}
+.signup-box{
+background:white;width:380px;padding:35px;border-radius:15px;
+box-shadow:0 8px 18px rgba(0,0,0,0.1)
+}
+.signup-box input{
+width:100%;padding:12px;border:1px solid #ccd4dd;border-radius:8px;margin-top:10px
+}
+.signup-box button{background:#003060;color:white}
+
+/* ---------------- DASHBOARD ------------------ */
+#dashboard{display:flex}
+.sidebar{
+width:250px;height:100vh;background:#002b5b;color:white;position:fixed;
+padding:25px 15px;
+}
+.sidebar a{
+display:flex;align-items:center;gap:12px;padding:12px 15px;
+color:white;text-decoration:none;border-radius:8px;margin-top:10px
+}
+.sidebar a:hover{background:#124f8c}
+.main{
+margin-left:270px;padding:25px;width:100%;
+}
+.cards{
+display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px
+}
+.card{
+background:white;padding:22px;border-radius:14px;box-shadow:0 6px 14px rgba(0,0,0,0.08)
+}
+.chart-container{
+background:white;padding:20px;margin-top:30px;border-radius:14px
+}
+
+canvas{height:350px !important}
+</style>
+</head>
+
+<body>
+
+<!-- ---------------------------------------------------------
+                   LOGIN PAGE
+------------------------------------------------------------- -->
+<div class="page" id="loginPage">
+<div class="login-box">
+<h2><i class="fa fa-leaf"></i> Smart Agri Login</h2>
+
+<input id="loginEmail" type="text" placeholder="Enter Email or Username">
+<input id="loginPass" type="password" placeholder="Enter Password">
+<button class="btn" onclick="doLogin()">Login</button>
+
+<p style="margin-top:12px;text-align:center">
+Don't have an account?
+<a style="color:#ffe66d;cursor:pointer" onclick="showSignup()">Create one</a>
+</p>
+
+<p id="loginMsg" style="text-align:center;margin-top:10px;color:yellow"></p>
+</div>
+</div>
+
+<!-- ---------------------------------------------------------
+                   SIGNUP PAGE
+------------------------------------------------------------- -->
+<div class="page" id="signupPage">
+<div class="signup-box">
+<h2>Create Account</h2>
+
+<input id="signupEmail" type="email" placeholder="Enter Email">
+<input id="signupPass" type="password" placeholder="Enter Password">
+
+<button onclick="doSignup()">Sign Up</button>
+
+<p style="margin-top:12px;text-align:center">
+Already have an account?
+<a style="color:#003060;cursor:pointer" onclick="showLogin()">Login</a>
+</p>
+</div>
+</div>
+
+<!-- ---------------------------------------------------------
+                   DASHBOARD PAGE
+------------------------------------------------------------- -->
+<div class="page" id="dashboard">
+
+<div class="sidebar">
+<h2>SmartSpace Agri</h2>
+<a><i class="fa fa-home"></i> Home</a>
+<a><i class="fa fa-temperature-high"></i> Temperature</a>
+<a><i class="fa fa-water"></i> Humidity</a>
+<a><i class="fa fa-seedling"></i> Soil Moisture</a>
+<a><i class="fa fa-leaf"></i> Crop Health</a>
+<a onclick="logout()" style="cursor:pointer"><i class="fa fa-sign-out"></i> Logout</a>
+</div>
+
+<div class="main">
+<h1>Smart Agri Dashboard</h1>
+<p>Real-time Monitoring Panel</p>
+
+<div class="cards">
+<div class="card"><h3 id="moisture">0%</h3><p>Soil Moisture</p></div>
+<div class="card"><h3 id="temperature">0°C</h3><p>Temperature</p></div>
+<div class="card"><h3 id="humidity">0%</h3><p>Humidity</p></div>
+<div class="card"><h3 id="ph">0</h3><p>pH Level</p></div>
+<div class="card"><h3 id="cropHealth">Healthy</h3><p>Crop Health</p></div>
+</div>
+
+<div class="chart-container">
+<h2>Daily Temperature Trend</h2>
+<canvas id="tempChart"></canvas>
+</div>
+
+<div class="chart-container">
+<h2>Soil Moisture Trend</h2>
+<canvas id="moistureChart"></canvas>
+</div>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+/* -------- PAGE SWITCH FUNCTIONS -------- */
+function showLogin(){ hideAll(); document.getElementById("loginPage").style.display="flex"; }
+function showSignup(){ hideAll(); document.getElementById("signupPage").style.display="flex"; }
+function showDashboard(){ hideAll(); document.getElementById("dashboard").style.display="flex"; }
+
+function hideAll(){
+document.querySelectorAll(".page").forEach(p=>p.style.display="none");
+}
+
+/* -------- SIGNUP WITH TIME RESTRICTION -------- */
+function doSignup(){
+const hour = new Date().getHours();
+if(hour < 9 || hour >= 23){
+alert("Signup allowed only between 9 AM to 6 PM.");
+return;
+}
+
+let email = signupEmail.value;
+let pass = signupPass.value;
+
+localStorage.setItem("agriEmail",email);
+localStorage.setItem("agriPass",pass);
+
+alert("Signup Successful!");
+showLogin();
+}
+
+/* -------- LOGIN -------- */
+function doLogin(){
+let email = loginEmail.value;
+let pass = loginPass.value;
+
+let savedEmail = localStorage.getItem("agriEmail");
+let savedPass = localStorage.getItem("agriPass");
+
+if(email === savedEmail && pass === savedPass){
+showDashboard();
+initCharts();
+}else{
+alert("Invalid Login!");
+}
+}
+
+/* -------- LOGOUT -------- */
+function logout(){
+showLogin();
+}
+
+/* -------- DASHBOARD LIVE VALUES -------- */
+function updateLiveValues(){
+moisture.innerText=(60+Math.random()*30).toFixed(1)+"%";
+temperature.innerText=(20+Math.random()*10).toFixed(1)+"°C";
+humidity.innerText=(50+Math.random()*40).toFixed(1)+"%";
+ph.innerText=(5+Math.random()*2).toFixed(1);
+
+let states=["Healthy","Moderate","Poor"];
+cropHealth.innerText=states[Math.floor(Math.random()*3)];
+}
+setInterval(updateLiveValues,2000);
+
+/* -------- CHART INIT -------- */
+function initCharts(){
+new Chart(tempChart.getContext("2d"),{
+type:"line",
+data:{
+labels:["9AM","11AM","1PM","3PM","5PM","7PM"],
+datasets:[{
+label:"Temperature (°C)",
+data:[22,24,26,25,27,28],
+borderColor:"#003060",fill:true,
+backgroundColor:"rgba(0,48,96,0.1)"
+}]
+}
+});
+
+new Chart(moistureChart.getContext("2d"),{
+type:"bar",
+data:{
+labels:["Mon","Tue","Wed","Thu","Fri","Sat"],
+datasets:[{
+label:"Soil Moisture (%)",
+data:[65,70,68,72,75,78],
+backgroundColor:"rgba(0,96,48,0.5)"
+}]
+}
+});
+}
+
+/* Show login page by default */
+showLogin();
+</script>
+
+</body>
+</html>
